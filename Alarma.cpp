@@ -560,7 +560,7 @@ boolean estadoSensor(){
                         cargarEstadoSensor("Habitacion","Inactivo");
                     }
                     delay(2000);
-                    cambiarEstadoSensor('H');
+                    banderaMenuPrincipal = cambiarEstadoSensor('H');
                 }else if(tecla == '2'){
                     if(valorSC[0]=='A'){
                         cargarEstadoSensor("Cocina","Activo");
@@ -568,7 +568,7 @@ boolean estadoSensor(){
                         cargarEstadoSensor("Cocina","Inactivo");
                     }
                     delay(2000);
-                    cambiarEstadoSensor('C');
+                    banderaMenuPrincipal = cambiarEstadoSensor('C');
                 }else if(tecla == '3'){
                     if(valorSE[0]=='A'){
                         cargarEstadoSensor("Entrada","Activo");
@@ -576,15 +576,18 @@ boolean estadoSensor(){
                         cargarEstadoSensor("Entrada","Inactivo");
                     }
                     delay(2000);
-                    cambiarEstadoSensor('E');
+                    banderaMenuPrincipal = cambiarEstadoSensor('E');
                 }else{
                     mostrarLCD("Opción inválida");
                     delay(1000);
                 }
+				if(banderaMenuPrincipal){
+					banderaBucle = false;
+				}else{
+					cargarLCD2Renglones("1SensH 2SensC","3SensE");
+				}
 
-                cargarLCD2Renglones("1SensH 2SensC","3SensE");
-
-            } else if (tecla == 'A') {
+            }else if (tecla == 'A') {
                 banderaBucle = false;
             }else if (tecla == 'C') {
                 banderaBucle = false;
@@ -622,14 +625,15 @@ void cambiarEstadoSensorEeprom(char sensor, char estado){
         escribirEeprom(str, 3, ';');
     }
 }
-void cambiarEstadoSensor(char sensor){
+boolean cambiarEstadoSensor(char sensor){
+	boolean banderaMenuPrincipal = false;
     boolean banderaBucle = true;
     cargarLCD2Renglones("1 Activar","2 Desactivar");
 
     while (banderaBucle) {
         char tecla = kp.getKey();
         if (tecla != NO_KEY) {
-            if (tecla != 'A') {
+            if (tecla != 'A' && tecla != 'C') {
               	cargarLCD2Renglones("1 Activar","2 Desactivar");
                 if(tecla == '1'){
                     cambiarEstadoSensorEeprom(sensor,'A');
@@ -647,9 +651,13 @@ void cambiarEstadoSensor(char sensor){
                 }
             } else if (tecla == 'A') {
                 banderaBucle = false;
+            }else if (tecla == 'C') {
+                banderaBucle = false;
+				banderaMenuPrincipal = true;
             }
         }
     }
+	return banderaMenuPrincipal;
 }
 boolean estadoAlarma(){
     boolean banderaMenuPrincipal = false;
@@ -810,7 +818,7 @@ void mostrarEventos(){
               	if(i==6){
               		bandera = false;
               	}
-            } else if (tecla == 'A') {
+            } else if (tecla == 'A' || tecla == 'C') {
                 bandera = false;
             }
             
