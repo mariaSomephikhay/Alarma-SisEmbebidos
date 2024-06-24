@@ -75,7 +75,6 @@ void setup() {
     
     //descomentar para utilizarlo con una config predeterminada
     //cargarEepromPorDefault();
-    
   	
   	cargarEepromManual();
     cargarConfiguracion();
@@ -101,9 +100,9 @@ void loop() {
       	cargarConfiguracion();
         mostrarValoorEeprom();
     }else{
+      	leerSensorHabitacion();
         leerSensorCocina();
         leerSensorEntrada();
-        leerSensorHabitacion();
     }
 }
 void mostrarValoorEeprom(){
@@ -193,7 +192,10 @@ void cargarEepromManual(){
                 }else{
                     mostrarLCD("PIN debe tener 4");
                     strcpy(pass, "");
+                    i=0;
                     delay(1000);
+                    mostrarLCD("Ingrese pin");
+                    lcd.setCursor(0, 1);
                 }
             }
         }
@@ -713,7 +715,7 @@ void opcionAlarma() {
     while (banderaBucle) {
         char tecla = kp.getKey();
         if (tecla != NO_KEY) {
-            if (tecla != 'A' && tecla != '#' && tecla != 'C') {
+            if (tecla != 'A' && tecla != '#' && tecla != 'C' && tecla != 'D') {
                 lcd.setCursor(i, 1);
                 lcd.print(tecla);
                 pinAlarma[i]=tecla;
@@ -726,6 +728,11 @@ void opcionAlarma() {
                 banderaBucle = false;
             } else if (tecla == '#') {
                 banderaBucle = false;
+            }else if (tecla == 'D') {
+                mostrarLCD("Ingrese pin");
+                lcd.setCursor(0, 1);
+                strcpy(pinAlarma, "");
+                i=0;
             }
         }
     }
@@ -756,6 +763,7 @@ void opcionAlarma() {
                             escribirEeprom(str, 5, ';');
                             mostrarLCD("Alarma Activa");
                             delay(1000);
+                            banderaBucle = false;
                         }else if(tecla == '2'){
                             char str[2];
                             str[0] = 'D';
@@ -763,11 +771,12 @@ void opcionAlarma() {
                             escribirEeprom(str, 5, ';');
                             mostrarLCD("Alarma Inactiva");
                             delay(1000);
+                            banderaBucle = false;
                         }else{
                             mostrarLCD("Opción inválida");
                             delay(1000);
+                            cargarLCD2Renglones("1 Activar","2 Desactivar");
                         }
-                        cargarLCD2Renglones("1 Activar","2 Desactivar");
                     } else if (tecla == 'A') {
                         banderaBucle = false;
                     }
@@ -797,13 +806,10 @@ void mostrarEventos(){
         if (tecla != NO_KEY) {
             if (tecla == '1') {
                 i = i-1;
+                i = mostrarEvento(i);
               	if(i==6){
-                    bandera = false;
-                    cargarLCD2Renglones("No hay mas","eventos");
-                    delay(2000);
-                }else{
-                	mostrarEvento(i);
-                }
+              		bandera = false;
+              	}
             } else if (tecla == 'A') {
                 bandera = false;
             }
@@ -824,13 +830,12 @@ int mostrarEvento (int pos){
             strcpy(evento, traerValorEepromPorDelimitador(';', posAux));
           	if(evento[0]!='X'){
           		bandera = false;
-          	}
-            if(posAux==6){
+          	}else if(posAux==5){
 				bandera = false;
             }
         }
     }
-  	if(posAux!=6){
+  	if(posAux>5){
       mostrarLCD("Alarma ");
       for(int i = 0; i<10; i++){
           if(i==0){
@@ -852,8 +857,14 @@ int mostrarEvento (int pos){
           }
 
       }
-    	delay(2000);
-    	cargarLCD2Renglones("1 siguiente evento","A salir");
+      	if(posAux==6){
+          	delay(2000);
+            cargarLCD2Renglones("No hay mas","eventos");
+            delay(2000);
+        }else{
+          	delay(2000);
+        	cargarLCD2Renglones("1 siguiente evento","A salir");
+        }
     }else{
     	cargarLCD2Renglones("No hay eventos","cargados");
       	delay(2000);
@@ -1012,15 +1023,15 @@ void registrarEvento(char sensor, int tiempo){
     int i = 6;
     boolean registrado = false;
     char evento[10];
-    strcpy(evento, traerValorEepromPorDelimitador(';', i));
     
-    while(i<15){
-        i++;
+    while(i<16){
         strcpy(evento, traerValorEepromPorDelimitador(';', i));
         if(evento[0]=='X'){
             escribirEventoEeprom(sensor,tiempo,i);
             registrado = true;
-            i=15; //para salir del bucle
+            i=16; //para salir del bucle
+        }else{
+        	i++;
         }
     }
     if(registrado==false){
